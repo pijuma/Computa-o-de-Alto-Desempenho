@@ -110,7 +110,7 @@ void atualizar_celula(int *estado_atual, int *tempo_atual, int *proximo_estado, 
 
             int vis_i = linha + i, vis_j = j + coluna ; 
             if(!valid(vis_i, vis_j, L, C)) continue ;
-            if(estado_atual[vis_i*C+vis_j] != 2) continue ; 
+            if(estado_atual[(long long)vis_i*C+vis_j] != 2) continue ;
             
             int prop_linha = linha - vis_i, prop_coluna = coluna - vis_j ; 
             int peso = 7 ; 
@@ -150,8 +150,9 @@ long long calcular_estatisticas(int *estado_atual, int *proximo_estado, long lon
 
     for(int i = 0 ; i < L ; i++){
         for(int j = 0 ; j < C ; j++){
-            if(estado_atual[i*C+j] == 1 && proximo_estado[i*C+j] == 2) novas++ ; 
-            if(proximo_estado[i*C+j] == 2) (*celulas_chama)++ ;
+            long long pos = (long long)i*C+j ;
+            if(estado_atual[pos] == 1 && proximo_estado[pos] == 2) novas++ ;
+            if(proximo_estado[pos] == 2) (*celulas_chama)++ ;
         }
     }
 
@@ -176,11 +177,11 @@ void trocar_matrizes(
 
 }
 
-Estatisticas contar_estados(int *estado_atual, int tamanho) {
-    
+Estatisticas contar_estados(int *estado_atual, long long tamanho) {
+
     Estatisticas stats = {0, 0, 0, 0, 0};
 
-    for (int i = 0; i < tamanho; i++) {
+    for (long long i = 0; i < tamanho; i++) {
         switch (estado_atual[i]) {
             case 0:
                 stats.nao_combustiveis++;
@@ -319,20 +320,23 @@ int main(int argc, char *argv[]){
         }
         if(!bet(focos[i].linha, 0, L-1)){
             fprintf(stderr, "Foco invalido\n") ;
-            free(focos) ; 
+            free(focos) ;
+            free(tem_foco) ;
             fclose(entrada) ;
             return 1;
         }
         if(!bet(focos[i].coluna, 0, C-1)){
             fprintf(stderr, "Foco invalido\n") ;
-            free(focos) ; 
+            free(focos) ;
+            free(tem_foco) ;
             fclose(entrada) ;
             return 1;
         }
-        int pos = focos[i].linha*C + focos[i].coluna ; 
+        long long pos = (long long)focos[i].linha*C + focos[i].coluna ;
         if(tem_foco[pos] == 1){//ja existia antes esse foco
             fprintf(stderr, "Foco invalido\n") ;
-            free(focos) ; 
+            free(focos) ;
+            free(tem_foco) ;
             fclose(entrada) ;
             return 1;
         }
@@ -358,7 +362,7 @@ int main(int argc, char *argv[]){
         return 1;
     }
 
-    for(int i = 0 ; i < tamanho ; i++) ativacao[i] = -1 ; 
+    for(long long i = 0 ; i < tamanho ; i++) ativacao[i] = -1 ;
 
     for (int i = 0; i < Z; i++) {
         if (fscanf(
@@ -385,17 +389,20 @@ int main(int argc, char *argv[]){
             !bet(zonas[i].coluna_fim, zonas[i].coluna_inicio, C-1)
         ){
             fprintf(stderr, "Zona invalida.\n");
-            free(focos) ; 
-            free(zonas) ; 
-            fclose(entrada) ; 
+            free(focos) ;
+            free(zonas) ;
+            free(tem_foco) ;
+            free(ativacao) ;
+            fclose(entrada) ;
             return 1;
         }
 
         //marcando as zonas de contencao com o menor valor que recebem
         for(int j = zonas[i].linha_inicio ; j <= zonas[i].linha_fim ; j++){
             for(int k = zonas[i].coluna_inicio ; k <= zonas[i].coluna_fim ; k++){
-                if(ativacao[j*C+k] == -1) ativacao[j*C+k] = zonas[i].passo ; 
-                ativacao[j*C+k] = min(ativacao[j*C+k], zonas[i].passo) ; 
+                long long pos = (long long)j*C+k ;
+                if(ativacao[pos] == -1) ativacao[pos] = zonas[i].passo ;
+                ativacao[pos] = min(ativacao[pos], zonas[i].passo) ;
             }
         }
 
@@ -422,7 +429,8 @@ int main(int argc, char *argv[]){
 
     for(int i = 0 ; i < L ; i++){
         for(int j = 0 ; j < C ; j++){
-            if(tem_foco[i*C+j] && cobertura[i*C+j] <= 1){
+            long long pos = (long long)i*C+j ;
+            if(tem_foco[pos] && cobertura[pos] <= 1){
                 fprintf(stderr, "Foco em área não combustivel.\n");
                 free(focos) ; 
                 free(zonas) ; 
@@ -567,5 +575,7 @@ int main(int argc, char *argv[]){
     free(ativacao);
     fclose(entrada);
     free(tem_foco);
+
+    return 0;
 
 }
