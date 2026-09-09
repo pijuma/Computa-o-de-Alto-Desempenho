@@ -7,7 +7,7 @@ Ferramenta independente que reproduz a simulação apenas para gerar dados e fig
 Na raiz do projeto:
 
 ```bash
-python3 viz/visualizar.py entrada_carga_pequena.txt
+python3 viz/visualizar.py data/entrada_carga_pequena.txt
 ```
 
 As dependências são NumPy, Matplotlib e GCC. Caso necessário:
