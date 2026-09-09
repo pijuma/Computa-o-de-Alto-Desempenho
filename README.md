@@ -18,5 +18,3 @@ make && ./fire_seq data/entrada_carga_pequena.txt
 - João Pedro Viguini Tolentino Taufner Correa — 14675503
 - Matheus Paiva Angarola — 12560982
 - Pietra Gullo Salgado Chaves — 14603222
-
----
