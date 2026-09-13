@@ -203,32 +203,6 @@ void atualizar_celula(
     }
 }
 
-long long calcular_estatisticas(
-    int* estado_atual,
-    int* proximo_estado,
-    long long* celulas_chama,
-    int L,
-    int C
-) {
-    // Calcula as estatisticas do passo atual
-
-    long long novas = 0;
-    *celulas_chama = 0;
-
-    #pragma omp for collapse(2) reduce(+:novas, *celulas_chama)
-    for (int i = 0; i < L; i++) {
-        for (int j = 0; j < C; j++) {
-            long long pos = (long long)i * C + j;
-            if (estado_atual[pos] == 1 && proximo_estado[pos] == 2)
-                novas++;
-            if (proximo_estado[pos] == 2)
-                (*celulas_chama)++;
-        }
-    }
-
-    return novas;
-}
-
 void trocar_matrizes(
     int** estado_atual,
     int** proximo_estado,
@@ -544,10 +518,14 @@ int main(int argc, char* argv[]) {
     double start, end;
     start = omp_get_wtime();
 
-    #pragma omp parallel num_threads(T) default(none) private(p) shared(L, C, P, limiar, vento, cobertura, umidade, ativacao, \
+
+    long long int novas ; 
+
+
+    #pragma omp parallel num_threads(T) default(none) firstprivate(p) shared(L, C, P, limiar, vento, cobertura, umidade, ativacao, \
        estado_atual, proximo_estado, tempo_atual, proximo_tempo, \
        celulas_chama, qtd_pico, pico_ignicao, total_ignicoes, \
-       passos_executados, p)
+       passos_executados, novas)
     {
         for (; p < P && celulas_chama > 0; p++) {
             ativar_contencoes(p, ativacao, estado_atual, L, C);
@@ -572,17 +550,40 @@ int main(int argc, char* argv[]) {
                 }
             }
 
-            long long novas =
-                calcular_estatisticas(estado_atual, proximo_estado, &celulas_chama, L, C);
-            if (novas > qtd_pico) {
-                qtd_pico = novas;
-                pico_ignicao = p;
+            #pragma omp single
+            {
+                novas = 0;
+                celulas_chama = 0;
             }
 
-            total_ignicoes += novas;
-            trocar_matrizes(&estado_atual, &proximo_estado, &tempo_atual, &proximo_tempo);
-            passos_executados++;
+            #pragma omp for collapse(2) reduction(+:novas, celulas_chama) schedule(static)
+            for (int i = 0; i < L; i++) {
+                for (int j = 0; j < C; j++) {
+                    long long pos = (long long)i * C + j;
+                    if (estado_atual[pos] == 1 && proximo_estado[pos] == 2)
+                        novas++;
+                    if (proximo_estado[pos] == 2)
+                        celulas_chama++;
+                }
+            }
+            
+            //só uma thread deve fazer isso 
+            #pragma omp single
+            {
+                if (novas > qtd_pico) {
+                    qtd_pico = novas;
+                    pico_ignicao = p;
+                }
+            }
 
+            #pragma omp single
+            {
+                total_ignicoes += novas;
+                trocar_matrizes(&estado_atual, &proximo_estado, &tempo_atual, &proximo_tempo);
+                passos_executados++;
+
+            }
+            
             if (!celulas_chama)
                 break;
         }
