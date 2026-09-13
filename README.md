@@ -17,4 +17,4 @@ make && ./fire_seq data/entrada_carga_pequena.txt
 - Gabriel de Andrade Abreu — 14571362
 - João Pedro Viguini Tolentino Taufner Correa — 14675503
 - Matheus Paiva Angarola — 12560982
-- Pietra Gullo Salgado Chaves — 14603222
+- Pietra Gullo Salgado Chaves — 14603822
