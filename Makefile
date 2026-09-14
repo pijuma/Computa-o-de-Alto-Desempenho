@@ -1,9 +1,15 @@
 .PHONY: all clean
 
-all: fire_seq
+CC := gcc
+CFLAGS := -Wall -Wextra -O2 -fopenmp
+
+all: fire_seq fire_omp
 
 fire_seq: fire_seq.c
-	gcc -Wall -Wextra -O2 -fopenmp fire_seq.c -o fire_seq
+	$(CC) $(CFLAGS) $< -o $@
+
+fire_omp: fire_omp.c
+	$(CC) $(CFLAGS) $< -o $@
 
 clean:
-	rm -f fire_seq
+	rm -f fire_seq fire_omp

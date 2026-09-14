@@ -1,8 +1,8 @@
-// Simula de forma sequencial a propagacao de um incendio em uma matriz
+// Simula de forma paralela, com OpenMP, a propagacao de um incendio em uma matriz
 // Considera cobertura, umidade, vento, focos iniciais e zonas de contencao
-// Data: 06/09/2026
+// Data: 14/09/2026
 
-// Execute com: make && ./fire_seq arquivo_de_entrada
+// Execute com: make && ./fire_omp arquivo_de_entrada
 
 #include <omp.h>
 #include <stdbool.h>
@@ -98,7 +98,7 @@ void ativar_contencoes(
     int L,
     int C
 ) {
-    // Ativa as contencoes do passo atual
+    // Ativa em paralelo as contencoes do passo atual
     #pragma omp for collapse(2)
     for (int i = 0; i < L; i++) {
         for (int j = 0; j < C; j++) {
@@ -522,6 +522,7 @@ int main(int argc, char* argv[]) {
     long long int novas ; 
 
 
+    // Executa cada passo coletivamente com uma equipe de T threads
     #pragma omp parallel num_threads(T) default(none) firstprivate(p) shared(L, C, P, limiar, vento, cobertura, umidade, ativacao, \
        estado_atual, proximo_estado, tempo_atual, proximo_tempo, \
        celulas_chama, qtd_pico, pico_ignicao, total_ignicoes, \
@@ -529,7 +530,8 @@ int main(int argc, char* argv[]) {
     {
         for (; p < P && celulas_chama > 0; p++) {
             ativar_contencoes(p, ativacao, estado_atual, L, C);
-            
+
+            // Distribui a atualizacao das celulas entre as threads
             #pragma omp for simd schedule(static) collapse(2)
             for (int linha = 0; linha < L; linha++) {
                 for (int coluna = 0; coluna < C; coluna++) {
@@ -550,12 +552,14 @@ int main(int argc, char* argv[]) {
                 }
             }
 
+            // Reinicia os acumuladores compartilhados antes da reducao
             #pragma omp single
             {
                 novas = 0;
                 celulas_chama = 0;
             }
 
+            // Soma em paralelo as novas ignicoes e as celulas ainda em chamas
             #pragma omp for collapse(2) reduction(+:novas, celulas_chama) schedule(static)
             for (int i = 0; i < L; i++) {
                 for (int j = 0; j < C; j++) {
@@ -567,7 +571,7 @@ int main(int argc, char* argv[]) {
                 }
             }
             
-            //só uma thread deve fazer isso 
+            // Uma unica thread atualiza as estatisticas do pico de ignicoes
             #pragma omp single
             {
                 if (novas > qtd_pico) {
@@ -576,6 +580,7 @@ int main(int argc, char* argv[]) {
                 }
             }
 
+            // Uma unica thread consolida o passo e alterna as matrizes
             #pragma omp single
             {
                 total_ignicoes += novas;

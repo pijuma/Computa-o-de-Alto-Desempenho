@@ -431,7 +431,7 @@ def grafico_snapshots(resultado, destino):
         frameon=False,
         handleheight=0.5,
         handlelength=1.6,
-        fontsize=11,
+        fontsize=15,
     )
     salvar_figura(figura, destino, "01_snapshots")
 
@@ -481,6 +481,7 @@ def grafico_evolucao(resultado, destino):
         frameon=False,
         handleheight=0.5,
         handlelength=1.6,
+        fontsize=13,
     )
     aplicar_estilo_eixos(eixo)
     eixo.set_facecolor("#F2F2F2")
@@ -571,6 +572,7 @@ def grafico_ignicoes(resultado, destino):
         ncols=2,
         frameon=False,
         handlelength=1.6,
+        fontsize=13,
     )
     salvar_figura(figura, destino, "03_ignicoes_por_passo")
 
@@ -672,13 +674,16 @@ def salvar_dados(resultado, destino):
     )
 
 
-def nome_saida_sequencial(entrada):
+def nome_saida(entrada, versao):
     nome = entrada.stem
-    if nome.startswith("entrada_seq_"):
+    prefixo = f"entrada_{versao}_"
+    if nome.startswith(prefixo):
         return nome
-    if nome.startswith("entrada_"):
-        return f"entrada_seq_{nome.removeprefix('entrada_')}"
-    return f"entrada_seq_{nome}"
+    for prefixo_entrada in ("entrada_seq_", "entrada_omp_", "entrada_"):
+        if nome.startswith(prefixo_entrada):
+            nome = nome.removeprefix(prefixo_entrada)
+            break
+    return f"{prefixo}{nome}"
 
 
 def main():
@@ -687,15 +692,21 @@ def main():
     )
     parser.add_argument("entrada", type=Path, help="arquivo de entrada da simulação")
     parser.add_argument(
+        "--versao",
+        choices=("seq", "omp"),
+        default="seq",
+        help="versão representada nas visualizações (padrão: seq)",
+    )
+    parser.add_argument(
         "--saida",
         type=Path,
-        help="diretório de saída (padrão: viz/saida/entrada_seq_<nome>)",
+        help="diretório de saída (padrão: viz/saida/entrada_<versao>_<nome>)",
     )
     argumentos = parser.parse_args()
 
     configuracao = ler_entrada(argumentos.entrada.resolve())
-    destino = argumentos.saida or BASE_DIR / "saida" / nome_saida_sequencial(
-        argumentos.entrada
+    destino = argumentos.saida or BASE_DIR / "saida" / nome_saida(
+        argumentos.entrada, argumentos.versao
     )
     destino.mkdir(parents=True, exist_ok=True)
 
