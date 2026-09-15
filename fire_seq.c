@@ -580,9 +580,9 @@ int main(int argc, char* argv[]) {
             break;
     }
 
-    end = omp_get_wtime();
-
     Estatisticas resp = contar_estados(estado_atual, tamanho);
+
+    end = omp_get_wtime();
 
     unsigned long long checksum = 0;
 
