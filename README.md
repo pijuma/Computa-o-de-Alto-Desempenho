@@ -5,10 +5,32 @@
 O trabalho simula a propagação de um incêndio florestal considerando vegetação, umidade, vento, focos iniciais e zonas de contenção. Seu objetivo é desenvolver e comparar as versões sequencial e paralela do algoritmo, avaliando a correção e o desempenho da simulação.</p>
 
 
-Para executar:
+## Compilação
 
 ```bash
-make && ./fire_seq data/entrada_carga_pequena.txt
+make
+```
+
+Esse comando gera dois executáveis:
+
+- `fire_seq`: versão sequencial;
+- `fire_omp`: versão paralela com OpenMP.
+
+## Execução
+
+As duas versões recebem o caminho do arquivo de entrada como argumento. Por exemplo:
+
+```bash
+./fire_seq data/entrada_carga_pequena.txt
+./fire_omp data/entrada_carga_pequena.txt
+```
+
+Na versão OpenMP, a quantidade de threads é definida pelo valor `T` informado na primeira linha do arquivo de entrada.
+
+Para remover os executáveis gerados:
+
+```bash
+make clean
 ```
 
 ## Integrantes
