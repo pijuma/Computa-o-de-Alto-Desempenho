@@ -1,0 +1,3 @@
+- adicionar a diretiva simd em algum lugar coerente (qual seria esse lugar?)
+- paralelizar o contar_estados (acho que dá pra usar reduction e quem sabe usar o simd aqui)
+- documentar no relatório a nossa escolha de usar um single pra resetar as variáveis
