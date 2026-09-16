@@ -6,10 +6,8 @@
 
 #include <omp.h>
 #include <stdbool.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 
 // Representa a posicao de um foco inicial de incendio
 typedef struct {
@@ -99,7 +97,7 @@ void ativar_contencoes(
     int C
 ) {
     // Ativa em paralelo as contencoes do passo atual
-    #pragma omp for collapse(2)
+    #pragma omp for collapse(2) schedule(runtime)
     for (int i = 0; i < L; i++) {
         for (int j = 0; j < C; j++) {
             long long pos = (long long)i * C + j;
@@ -532,7 +530,7 @@ int main(int argc, char* argv[]) {
             ativar_contencoes(p, ativacao, estado_atual, L, C);
 
             // Distribui a atualizacao das celulas entre as threads
-            #pragma omp for simd schedule(static) collapse(2)
+            #pragma omp for schedule(runtime) collapse(2)
             for (int linha = 0; linha < L; linha++) {
                 for (int coluna = 0; coluna < C; coluna++) {
                     atualizar_celula(
@@ -560,7 +558,7 @@ int main(int argc, char* argv[]) {
             }
 
             // Soma em paralelo as novas ignicoes e as celulas ainda em chamas
-            #pragma omp for collapse(2) reduction(+:novas, celulas_chama) schedule(static)
+            #pragma omp for collapse(2) reduction(+:novas, celulas_chama) schedule(runtime)
             for (int i = 0; i < L; i++) {
                 for (int j = 0; j < C; j++) {
                     long long pos = (long long)i * C + j;
@@ -572,21 +570,17 @@ int main(int argc, char* argv[]) {
             }
             
             // Uma unica thread atualiza as estatisticas do pico de ignicoes
+            // e consolida o passo e alterna as matrizes
             #pragma omp single
             {
                 if (novas > qtd_pico) {
                     qtd_pico = novas;
                     pico_ignicao = p;
                 }
-            }
 
-            // Uma unica thread consolida o passo e alterna as matrizes
-            #pragma omp single
-            {
                 total_ignicoes += novas;
                 trocar_matrizes(&estado_atual, &proximo_estado, &tempo_atual, &proximo_tempo);
                 passos_executados++;
-
             }
             
             if (!celulas_chama)
