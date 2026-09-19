@@ -539,17 +539,14 @@ int main(int argc, char* argv[]) {
             }
 
             // Soma em paralelo as novas ignicoes e as celulas ainda em chamas
-            #pragma omp for simd collapse(2) reduction(+:novas, celulas_chama) schedule(runtime)
-            for (int i = 0; i < L; i++) {
-                for (int j = 0; j < C; j++) {
-                    long long pos = (long long)i * C + j;
-                    if (estado_atual[pos] == 1 && proximo_estado[pos] == 2)
-                        novas++;
-                    if (proximo_estado[pos] == 2)
-                        celulas_chama++;
-                }
+            #pragma omp for simd reduction(+:novas, celulas_chama) schedule(runtime)
+            for (long long pos = 0; pos < tamanho; pos++) {
+                if (estado_atual[pos] == 1 && proximo_estado[pos] == 2)
+                    novas++;
+                if (proximo_estado[pos] == 2)
+                    celulas_chama++;
             }
-            
+
             // Uma unica thread atualiza as estatisticas do pico de ignicoes
             // e consolida o passo e alterna as matrizes
             #pragma omp single
@@ -563,7 +560,7 @@ int main(int argc, char* argv[]) {
                 trocar_matrizes(&estado_atual, &proximo_estado, &tempo_atual, &proximo_tempo);
                 passos_executados++;
             }
-            
+
             if (!celulas_chama)
                 break;
         }
