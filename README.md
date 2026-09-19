@@ -58,7 +58,9 @@ export OMP_SCHEDULE=static
 ./fire_omp data/entrada_carga_grande.txt
 ```
 
-> **Importante:** sempre defina `OMP_SCHEDULE` ao executar `fire_omp`. Sem ela, o OpenMP do GCC (libgomp) adota `dynamic,1`, que distribui as iterações uma a uma e deixa a execução muito mais lenta.
+> **Padrão:** quando `OMP_SCHEDULE` não é definida, `fire_omp` seleciona `static`. Defina a variável somente quando quiser comparar outra política de escalonamento, como nos exemplos acima.
+
+A versão OpenMP mantém uma única região paralela durante a simulação. As novas ignições, as células em chamas e os cinco estados finais são contados com reduções; a contagem final usa um laço linear `omp for simd`. O relatório descreve as barreiras implícitas, a região `single` e o diagnóstico de vetorização do compilador do cluster.
 
 
 ## Integrantes

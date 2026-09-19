@@ -1,3 +1,4 @@
-- adicionar a diretiva simd em algum lugar coerente (qual seria esse lugar?)
-- paralelizar o contar_estados (acho que dá pra usar reduction e quem sabe usar o simd aqui)
-- documentar no relatório a nossa escolha de usar um single pra resetar as variáveis
+- [x] adicionar `simd` à redução de novas ignições e células em chamas
+- [x] paralelizar a contagem final dos cinco estados com `omp for simd` e reduções, dentro da região persistente
+- [x] verificar a vetorização com o relatório de otimizações do compilador usado no cluster
+- [x] documentar no relatório o uso de `single`, suas barreiras e a troca segura dos ponteiros

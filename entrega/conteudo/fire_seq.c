@@ -1,8 +1,8 @@
-// Simula de forma paralela, com OpenMP, a propagacao de um incendio em uma matriz
+// Simula de forma sequencial a propagacao de um incendio em uma matriz
 // Considera cobertura, umidade, vento, focos iniciais e zonas de contencao
-// Data: 14/09/2026
+// Data: 06/09/2026
 
-// Execute com: make && ./fire_omp arquivo_de_entrada
+// Execute com: make && ./fire_seq arquivo_de_entrada
 
 #include <omp.h>
 #include <stdbool.h>
@@ -96,8 +96,8 @@ void ativar_contencoes(
     int L,
     int C
 ) {
-    // Ativa em paralelo as contencoes do passo atual
-    #pragma omp for collapse(2) schedule(runtime)
+    // Ativa as contencoes do passo atual
+
     for (int i = 0; i < L; i++) {
         for (int j = 0; j < C; j++) {
             long long pos = (long long)i * C + j;
@@ -201,6 +201,31 @@ void atualizar_celula(
     }
 }
 
+long long calcular_estatisticas(
+    int* estado_atual,
+    int* proximo_estado,
+    long long* celulas_chama,
+    int L,
+    int C
+) {
+    // Calcula as estatisticas do passo atual
+
+    long long novas = 0;
+    *celulas_chama = 0;
+
+    for (int i = 0; i < L; i++) {
+        for (int j = 0; j < C; j++) {
+            long long pos = (long long)i * C + j;
+            if (estado_atual[pos] == 1 && proximo_estado[pos] == 2)
+                novas++;
+            if (proximo_estado[pos] == 2)
+                (*celulas_chama)++;
+        }
+    }
+
+    return novas;
+}
+
 void trocar_matrizes(
     int** estado_atual,
     int** proximo_estado,
@@ -218,6 +243,36 @@ void trocar_matrizes(
     aux = *tempo_atual;
     *tempo_atual = *proximo_tempo;
     *proximo_tempo = aux;
+}
+
+Estatisticas contar_estados(int* estado_atual, long long tamanho) {
+    // Conta as celulas em cada estado
+
+    Estatisticas stats = {0, 0, 0, 0, 0};
+
+    for (long long i = 0; i < tamanho; i++) {
+        switch (estado_atual[i]) {
+            case 0:
+                stats.nao_combustiveis++;
+                break;
+            case 1:
+                stats.intactas++;
+                break;
+            case 2:
+                stats.em_chamas++;
+                break;
+            case 3:
+                stats.queimadas++;
+                break;
+            case 4:
+                stats.contencao++;
+                break;
+            default:
+                break;
+        }
+    }
+
+    return stats;
 }
 
 int main(int argc, char* argv[]) {
@@ -483,110 +538,47 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    // Mantem uma equipe fixa e um padrao previsivel sem exigir OMP_SCHEDULE.
-    omp_set_dynamic(0);
-    if (getenv("OMP_SCHEDULE") == NULL)
-        omp_set_schedule(omp_sched_static, 0);
-
     double start, end;
     start = omp_get_wtime();
 
+    for (; p < P && celulas_chama > 0; p++) {
+        ativar_contencoes(p, ativacao, estado_atual, L, C);
 
-    long long int novas;
-    long long nao_combustiveis = 0;
-    long long intactas = 0;
-    long long em_chamas = 0;
-    long long queimadas = 0;
-    long long contencao = 0;
-
-
-    // Executa cada passo coletivamente com uma equipe de T threads
-    #pragma omp parallel num_threads(T) default(none) firstprivate(p) shared(L, C, P, limiar, vento, cobertura, umidade, ativacao, \
-       estado_atual, proximo_estado, tempo_atual, proximo_tempo, \
-       celulas_chama, qtd_pico, pico_ignicao, total_ignicoes, \
-       passos_executados, novas, tamanho, nao_combustiveis, intactas, \
-       em_chamas, queimadas, contencao)
-    {
-        for (; p < P && celulas_chama > 0; p++) {
-            ativar_contencoes(p, ativacao, estado_atual, L, C);
-
-            // Distribui a atualizacao das celulas entre as threads
-            #pragma omp for schedule(runtime) collapse(2)
-            for (int linha = 0; linha < L; linha++) {
-                for (int coluna = 0; coluna < C; coluna++) {
-                    atualizar_celula(
-                        estado_atual,
-                        tempo_atual,
-                        proximo_estado,
-                        proximo_tempo,
-                        linha,
-                        coluna,
-                        L,
-                        C,
-                        limiar,
-                        umidade,
-                        cobertura,
-                        vento
-                    );
-                }
+        for (int linha = 0; linha < L; linha++) {
+            for (int coluna = 0; coluna < C; coluna++) {
+                atualizar_celula(
+                    estado_atual,
+                    tempo_atual,
+                    proximo_estado,
+                    proximo_tempo,
+                    linha,
+                    coluna,
+                    L,
+                    C,
+                    limiar,
+                    umidade,
+                    cobertura,
+                    vento
+                );
             }
-
-            // Reinicia os acumuladores compartilhados antes da reducao
-            #pragma omp single
-            {
-                novas = 0;
-                celulas_chama = 0;
-            }
-
-            // Soma em paralelo as novas ignicoes e as celulas ainda em chamas
-            #pragma omp for simd collapse(2) reduction(+:novas, celulas_chama) schedule(runtime)
-            for (int i = 0; i < L; i++) {
-                for (int j = 0; j < C; j++) {
-                    long long pos = (long long)i * C + j;
-                    if (estado_atual[pos] == 1 && proximo_estado[pos] == 2)
-                        novas++;
-                    if (proximo_estado[pos] == 2)
-                        celulas_chama++;
-                }
-            }
-            
-            // Uma unica thread atualiza as estatisticas do pico de ignicoes
-            // e consolida o passo e alterna as matrizes
-            #pragma omp single
-            {
-                if (novas > qtd_pico) {
-                    qtd_pico = novas;
-                    pico_ignicao = p;
-                }
-
-                total_ignicoes += novas;
-                trocar_matrizes(&estado_atual, &proximo_estado, &tempo_atual, &proximo_tempo);
-                passos_executados++;
-            }
-            
-            if (!celulas_chama)
-                break;
         }
 
-        // Conta em paralelo os cinco estados finais ainda dentro da equipe persistente.
-        #pragma omp for simd schedule(runtime) reduction(+:nao_combustiveis, intactas, em_chamas, queimadas, contencao)
-        for (long long i = 0; i < tamanho; i++) {
-            int estado = estado_atual[i];
-            nao_combustiveis += (estado == 0);
-            intactas += (estado == 1);
-            em_chamas += (estado == 2);
-            queimadas += (estado == 3);
-            contencao += (estado == 4);
+        long long novas =
+            calcular_estatisticas(estado_atual, proximo_estado, &celulas_chama, L, C);
+        if (novas > qtd_pico) {
+            qtd_pico = novas;
+            pico_ignicao = p;
         }
+
+        total_ignicoes += novas;
+        trocar_matrizes(&estado_atual, &proximo_estado, &tempo_atual, &proximo_tempo);
+        passos_executados++;
+
+        if (!celulas_chama)
+            break;
     }
 
-    Estatisticas resp = {
-        nao_combustiveis,
-        intactas,
-        em_chamas,
-        queimadas,
-        contencao
-    };
+    Estatisticas resp = contar_estados(estado_atual, tamanho);
 
     end = omp_get_wtime();
 
