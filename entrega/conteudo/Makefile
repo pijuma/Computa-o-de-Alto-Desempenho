@@ -1,7 +1,7 @@
 .PHONY: all clean
 
 CC := gcc
-CFLAGS := -Wall -Wextra -O2 -fopenmp
+CFLAGS := -Wall -Wextra -O3 -fopenmp
 
 all: fire_seq fire_omp
 
