@@ -2,3 +2,4 @@ fire_seq
 fire_omp
 .ruff_cache/
 tmp/
+.env*
