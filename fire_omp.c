@@ -9,6 +9,10 @@ A versão paralela usa schedule(runtime) nos laços paralelos.
 
 Por isso, o escalonamento é escolhido no momento da execução, pela variável de ambiente OMP_SCHEDULE, e não por um argumento do programa. 
 
+Primeiro, compile com:
+
+make all
+
 Defina a variável na mesma linha do comando:
 
 OMP_SCHEDULE=static ./fire_omp entrada_carga_pequena.txt
