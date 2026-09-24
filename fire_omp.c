@@ -2,7 +2,32 @@
 // Considera cobertura, umidade, vento, focos iniciais e zonas de contencao
 // Data: 14/09/2026
 
-// Execute com: make && ./fire_omp arquivo_de_entrada
+/*
+[Importante - Instruções de execução]
+
+A versão paralela usa schedule(runtime) nos laços paralelos. 
+
+Por isso, o escalonamento é escolhido no momento da execução, pela variável de ambiente OMP_SCHEDULE, e não por um argumento do programa. 
+
+Defina a variável na mesma linha do comando:
+
+OMP_SCHEDULE=static ./fire_omp data/entrada_carga_pequena.txt
+
+Outros exemplos:
+
+OMP_SCHEDULE="static,1024" ./fire_omp data/entrada_carga_pequena.txt
+OMP_SCHEDULE="dynamic,64"  ./fire_omp data/entrada_carga_pequena.txt
+OMP_SCHEDULE="guided,64"   ./fire_omp data/entrada_carga_pequena.txt
+
+O formato é tipo[,chunk], em que tipo pode ser static, dynamic, guided ou auto, e chunk é o tamanho opcional dos blocos de iterações.
+
+Para usar o mesmo schedule em várias execuções seguidas, exporte a variável uma vez no terminal:
+
+export OMP_SCHEDULE=static
+./fire_omp data/entrada_carga_pequena.txt
+./fire_omp data/entrada_carga_grande.txt
+
+*/
 
 #include <omp.h>
 #include <stdbool.h>
