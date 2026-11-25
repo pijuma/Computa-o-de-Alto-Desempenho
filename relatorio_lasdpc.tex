@@ -1,0 +1,150 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage{lmodern,geometry,setspace,graphicx,float,booktabs,array,xcolor,tcolorbox,amsmath}
+\usepackage{hyperref,titlesec,fancyhdr,caption,subcaption,microtype,tocloft}
+\geometry{top=2.5cm,bottom=2.5cm,left=2.7cm,right=2.7cm}
+\setstretch{1.12}
+\setlength{\parindent}{1.25cm}
+\setlength{\parskip}{0.2em}
+\definecolor{cinzaclaro}{RGB}{245,245,245}
+\hypersetup{colorlinks=true,linkcolor=black,urlcolor=black,citecolor=black}
+\titleformat{\section}{\Large\bfseries}{\thesection.}{0.6em}{}
+\titleformat{\subsection}{\large\bfseries}{\thesubsection}{0.6em}{}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small SSC0903 --- Computação de Alto Desempenho}
+\fancyhead[R]{\small Segundo Trabalho Prático (TB2)}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\setlength{\headheight}{14pt}
+\captionsetup{font=small,labelfont=bf,hypcap=false}
+\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}
+
+\begin{document}
+
+\hypersetup{pageanchor=false}
+\begin{titlepage}
+    \centering
+    {\large \textbf{Universidade de São Paulo}}\\[0.15cm]
+    {\large Instituto de Ciências Matemáticas e de Computação}\\[0.8cm]
+    {\large \textbf{Computação de Alto Desempenho --- SSC0903}}\\[4.6cm]
+    {\Huge \textbf{Segundo Trabalho Prático (TB2)}}\\[0.4cm]
+    {\Large Simulação paralela híbrida em C com MPI e OpenMP da propagação direcional de incêndio com zonas de contenção}\\[5.1cm]
+    \textbf{Integrantes}\\[0.35cm]
+    Felipe de Castro Azambuja --- 14675437\\
+    Gabriel de Andrade Abreu --- 14571362\\
+    João Pedro Viguini Tolentino Taufner Correa --- 14675503\\
+    Matheus Paiva Angarola --- 12560982\\
+    Pietra Gullo Salgado Chaves --- 14603822
+    \vfill
+    {\large São Carlos, 2026}\\[0.3cm]{\small Rascunho --- campanha no LASDPC pendente}
+\end{titlepage}
+
+\hypersetup{pageanchor=true}
+\pagenumbering{roman}
+{\small\tableofcontents}
+\newpage
+\pagenumbering{arabic}
+
+\section{Introdução}
+
+No TB1, uma equipe OpenMP dividia entre suas threads o trabalho de uma floresta inteira. No TB2, a floresta pode ocupar mais de um nó. Cada processo MPI recebe parte da grade e usa uma equipe OpenMP para trabalhar nessa parte.
+
+A floresta é uma grade de $L$ linhas por $C$ colunas. A configuração inicial pode incluir focos de incêndio. A simulação avança em passos. Em cada passo, as contenções programadas convertem células intactas em células de contenção. A propagação depende das células vizinhas em chamas e da direção do vento. A simulação termina quando o fogo acaba ou quando atinge $P$ passos.
+
+Usamos o programa sequencial do TB1 para conferir a saída e como referência de tempo. A avaliação compara configurações com diferentes números de processos MPI, $R$, e threads por processo, $T$.
+
+\section{Projeto paralelo segundo o PCAM}
+
+Escolhemos fazer o particionamento por dados e manter, dentro de cada processo, a divisão do trabalho entre threads OpenMP usada no TB1. As etapas de um passo têm uma ordem a respeitar, mas podemos distribuir a matriz e trabalhar em várias partes dela ao mesmo tempo. O PCAM abaixo trata do trecho cronometrado.
+
+\subsection{Particionamento}
+
+Para o particionamento por dados, dividimos a matriz $L \times C$ em $L \times C$ tarefas conceituais. Cada tarefa é responsável por uma célula. O passo atual parte da configuração produzida pelo passo anterior. Dentro de cada passo, as dependências são as seguintes.
+
+\begin{enumerate}
+    \item \textbf{Ativar as contenções.} Precisamos do estado da própria célula e do passo de ativação registrado para ela. Uma célula intacta com ativação marcada para o passo atual passa a ser uma célula de contenção. Essa operação independe das outras células.
+    \item \textbf{Atualizar a célula.} Precisamos de seu estado após a ativação, do tempo de queima, da cobertura e da umidade. Também precisamos do estado atual dos até oito vizinhos de Moore para saber quais estão em chamas. São os vizinhos na mesma linha, na linha de cima e na de baixo, a uma distância de no máximo uma coluna.
+    \item \textbf{Contar novas ignições e células em chamas.} Comparamos o estado atual com o próximo estado para identificar uma nova ignição. O próximo estado também diz se a célula está em chamas ao fim do passo. As contribuições de todas as células são somadas.
+    \item \textbf{Trocar as matrizes.} O próximo estado e o próximo tempo de queima tornam-se os atuais depois que todas as células concluem a atualização e a contagem do passo.
+    \item \textbf{Testar a condição de parada.} O próximo passo só começa se ainda houver células em chamas e o limite de passos não tiver sido atingido.
+\end{enumerate}
+
+\subsection{Comunicação}
+
+\textbf{Comunicação com os vizinhos.} A comunicação é simétrica. Se uma tarefa precisa do estado de um vizinho, esse vizinho também pode precisar do estado dela. Após a ativação das contenções, a atualização espera pelos estados de fronteira do passo atual. Só o estado dos vizinhos é compartilhado, pois tempo de queima, cobertura e umidade são consultados apenas na própria célula. Se cada célula fosse tratada separadamente, seriam até oito envios por célula e por passo, com menos envios nas bordas e nos cantos.
+
+\textbf{Redução global.} Após a atualização, cada célula contribui com dois valores. O primeiro vale um quando houve nova ignição e o segundo vale um quando a célula termina o passo em chamas. Nos demais casos, a contribuição correspondente vale zero. Os processos somam essas contribuições e recebem os totais para atualizar as estatísticas e tomar a mesma decisão de parada.
+
+\textbf{Troca de matrizes e teste de parada.} Cada processo troca suas matrizes após receber os totais. As threads do processo sincronizam antes de seguir. Entre processos, o vizinho só envia o estado do próximo passo depois de fazer a própria troca e concluir a ativação desse passo. O processo que recebe espera pela fronteira antes de usá-la. Assim, a troca de fronteiras já garante a sincronização necessária entre vizinhos. Ao final da simulação, outra redução reúne as contagens dos estados finais.
+
+\subsection{Aglomeração}
+
+Como o número de tarefas é muito maior que o número de processos, agrupamos as células em blocos maiores para evitar o envio de um valor por mensagem. Escolhemos agrupar por linhas. Cada processo recebe cerca de $L/R$ linhas consecutivas. Quando a divisão não é exata, os primeiros $L \bmod R$ processos recebem uma linha a mais, de forma que a diferença entre o maior e o menor bloco seja de no máximo uma linha.
+
+A escolha por linhas vem principalmente do formato da comunicação. Se o processo tem a linha inteira, os vizinhos da mesma linha já estão nele. Uma linha só depende da linha anterior e da seguinte, quando existem. Por isso, apenas a primeira e a última linha da faixa podem precisar de estados de outro processo. Uma linha inteira de fronteira inclui também os vizinhos diagonais.
+
+A divisão por colunas teria uma dependência parecida. Como a matriz é armazenada por linhas, cada faixa e cada linha de fronteira ocupam posições contíguas e podem ser enviadas diretamente. Os elementos de uma coluna estariam espaçados em memória.
+
+\subsection{Mapeamento}
+
+Cada faixa fica com o mesmo processo MPI durante a simulação. O lançador distribui os processos pelos nós indicados no arquivo de hosts. Dentro de cada processo, mantemos a estratégia do TB1. Uma equipe OpenMP persistente divide o trabalho da faixa e soma suas contribuições antes da redução entre processos. A divisão das iterações entre threads é estática por padrão. A afinidade das threads às CPUs depende da configuração de execução.
+
+\section{Implementação}
+
+O rank 0 lê a entrada, gera a grade na ordem do TB1 e distribui as faixas. Para preparar o mapa de contenção, ele cria tarefas OpenMP sobre blocos disjuntos de até 64 linhas. Cada tarefa registra o primeiro passo de ativação de suas células. O rank 0 também reúne o estado e o tempo de queima finais na ordem da grade para calcular o \textit{checksum}.
+
+O laço OpenMP de ativação termina com uma barreira implícita. A thread que inicializou o MPI troca os estados de fronteira com os ranks adjacentes. Uma barreira OpenMP explícita libera a atualização após a troca. Entre ranks, o recebimento da fronteira estabelece a dependência com o vizinho. A Tabela~\ref{tab:requisitos-tb2} relaciona os requisitos do enunciado às construções usadas no código.
+
+
+\begin{table}[H]
+    \centering
+    \caption{Atendimento aos requisitos de implementação em \texttt{fire\_mpi\_omp.c}.}
+    \label{tab:requisitos-tb2}
+    \small
+    \begin{tabular}{>{\raggedright\arraybackslash}p{4.1cm}>{\raggedright\arraybackslash}p{9.9cm}}
+        \toprule
+        Requisito & Implementação adotada \\
+        \midrule
+        Processos MPI e threads OMP & Inicialização com \texttt{MPI\_Init\_thread} (\texttt{MPI\_THREAD\_FUNNELED}) para $R$ processos via \texttt{mpirun} e equipe de $T$ threads via \texttt{num\_threads(T)}. \\
+        Primitivas MPI coletivas & \texttt{MPI\_Bcast} (status e metadados), \texttt{MPI\_Scatterv} (5 vetores iniciais), \texttt{MPI\_Allreduce} (alocação, estatísticas por passo e 5 estados finais), \texttt{MPI\_Reduce} (\texttt{MPI\_MAX} do tempo) e \texttt{MPI\_Gatherv} (estado e tempo finais). \\
+        Troca de fronteiras & Duas chamadas \texttt{MPI\_Sendrecv} por passo na thread 0 de cada rank com linhas, trocando apenas as linhas-borda de \texttt{estado\_atual\_ext} com tags 10 e 20. \\
+        Região paralela persistente & Uma única região \texttt{\#pragma omp parallel} envolve todo o laço temporal e a redução local dos cinco estados finais. \\
+        Uso de \texttt{omp tasks} & Na preparação do mapa de ativação, uma região \texttt{single} gera tarefas \texttt{\#pragma omp task} para blocos de até 64 linhas e sincroniza com \texttt{taskwait}. \\
+        Uso de \texttt{omp for} e \texttt{simd} & \texttt{omp for collapse(2)} na ativação de zonas e na atualização do stencil; \texttt{omp for simd reduction(+:...)} nas duas reduções lineares. \\
+        Troca segura e parada & Troca de ponteiros e incremento de \texttt{passos\_executados} na thread 0 após o \texttt{MPI\_Allreduce}, seguidos de \texttt{omp barrier} antes do teste de \texttt{celulas\_chama}. \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+As coletivas de distribuição e reunião usam contagens e deslocamentos do tipo \texttt{int}. A grade tem, portanto, no máximo \texttt{INT\_MAX} células. Os ranks conferem as alocações locais em conjunto antes de preencher os vetores de distribuição.
+
+\section{Validação}
+\label{sec:validacao}
+
+Para a validação no LASDPC, compilaremos a versão híbrida e o \texttt{fire\_seq.c} do TB1 na mesma plataforma. O teste comparará as 11 linhas da saída que descrevem a simulação, incluindo o \textit{checksum}. O tempo fica fora dessa comparação. Os casos cobrem as três cargas, fronteiras entre ranks, faixas desiguais, ranks sem linhas, sobreposição de contenções e parada sem executar passos. Nas entradas inválidas, o teste verifica o código de saída e usa um limite de tempo para detectar bloqueios.
+
+\section{Ambiente e metodologia experimental}
+\label{sec:metodologia}
+
+O protocolo prevê uma execução de teste em dois nós do LASDPC antes da campanha. Para essa execução, o registro deve incluir a identificação dos nós, a colocação dos ranks e a comparação com a saída sequencial. Para as medições, registraremos processador, compilador, MPI, flags, hostfile e afinidade. O piloto definirá as configurações e o número de repetições compatíveis com os recursos disponíveis.
+
+Para cada carga, mediremos a versão sequencial e as configurações híbridas no LASDPC. Nas entradas da versão híbrida, variaremos apenas o número de threads. Uma barreira MPI precede a leitura inicial de \texttt{omp\_get\_wtime()}. A medição termina após a redução global dos contadores finais. O programa reporta o maior intervalo local entre os ranks. Para $R$ ranks e $T$ threads por rank, calcularemos o \textit{speedup} a partir das médias da mesma carga,
+\[
+S(R,T) = \frac{\overline{t}_{\mathrm{seq}}}{\overline{t}_{\mathrm{hib}}(R,T)},
+\qquad E(R,T) = \frac{S(R,T)}{R T}.
+\]
+Quando houver alocação comparável em um e dois nós, repetiremos o mesmo $R \times T$ para avaliar a diferença entre as duas colocações.
+
+\section{Resultados e análise}
+
+Aguardando as execuções no LASDPC. As tabelas de validação e desempenho e os gráficos serão preenchidos a partir dos registros da campanha.
+
+\section{Conclusão}
+
+Conclusão a completar após a campanha no LASDPC.
+
+\end{document}
