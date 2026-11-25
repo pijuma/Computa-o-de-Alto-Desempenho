@@ -109,8 +109,8 @@ void construir_mapa_ativacao_tasks(
     {
         #pragma omp single
         {
-            for (int r0 = 0; r0 < L; r0 += BLOCO_LINHAS) {
-                int r1 = min(L - 1, r0 + BLOCO_LINHAS - 1);
+            for (int r0 = 0; r0 < L;) {
+                int r1 = r0 + min(BLOCO_LINHAS, L - r0) - 1;
                 #pragma omp task firstprivate(r0, r1) shared(ativacao, C, zonas, Z)
                 {
                     for (int r = r0; r <= r1; r++) {
@@ -136,6 +136,7 @@ void construir_mapa_ativacao_tasks(
                         }
                     }
                 }
+                r0 = r1 + 1;
             }
             #pragma omp taskwait
         }
@@ -235,8 +236,8 @@ void atualizar_celula_local(
             if (!valid_global(vis_global_i, vis_j, L, C))
                 continue;
 
-            int vis_ext_i = i_ext + di;
-            if (estado_atual_ext[(long long)vis_ext_i * C + vis_j] != 2)
+            long long vis_ext_i = (long long)i_ext + di;
+            if (estado_atual_ext[vis_ext_i * C + vis_j] != 2)
                 continue;
 
             int prop_linha = -di;
@@ -279,7 +280,7 @@ void trocar_halo_estados(
 
     MPI_Sendrecv(
         estado_atual_ext + C, C, MPI_INT, up_partner, 10,
-        estado_atual_ext + (long long)(local_L + 1) * C, C, MPI_INT, down_partner, 10,
+        estado_atual_ext + ((long long)local_L + 1) * C, C, MPI_INT, down_partner, 10,
         MPI_COMM_WORLD, MPI_STATUS_IGNORE
     );
     MPI_Sendrecv(
@@ -586,25 +587,12 @@ int main(int argc, char* argv[]) {
     // Particionamento 1D por faixas contiguas de linhas
     int* sendcounts = malloc((size_t)nprocs * sizeof(int));
     int* displs = malloc((size_t)nprocs * sizeof(int));
-    int* row_counts = malloc((size_t)nprocs * sizeof(int));
-    int* row_offsets = malloc((size_t)nprocs * sizeof(int));
-
     int base_rows = L / nprocs;
     int rem_rows = L % nprocs;
-    int cur_row = 0;
-    for (int r = 0; r < nprocs; r++) {
-        int rows = base_rows + (r < rem_rows ? 1 : 0);
-        row_counts[r] = rows;
-        row_offsets[r] = cur_row;
-        sendcounts[r] = rows * C;
-        displs[r] = cur_row * C;
-        cur_row += rows;
-    }
-
-    int local_L = row_counts[rank];
-    int row_offset = row_offsets[rank];
+    int local_L = base_rows + (rank < rem_rows);
+    int row_offset = rank * base_rows + min(rank, rem_rows);
     long long local_cells = (long long)local_L * C;
-    long long ext_cells = (long long)(local_L + 2) * C;
+    long long ext_cells = ((long long)local_L + 2) * C;
 
     size_t alloc_local = (local_cells > 0) ? (size_t)local_cells : 1;
     int* cobertura_local = malloc(alloc_local * sizeof(int));
@@ -616,7 +604,7 @@ int main(int argc, char* argv[]) {
     int* proximo_estado_ext = calloc((size_t)ext_cells, sizeof(int));
 
     int local_alloc_ok =
-        (sendcounts != NULL && displs != NULL && row_counts != NULL && row_offsets != NULL &&
+        (sendcounts != NULL && displs != NULL &&
          cobertura_local != NULL && umidade_local != NULL && ativacao_local != NULL &&
          tempo_atual != NULL && proximo_tempo != NULL &&
          estado_atual_ext != NULL && proximo_estado_ext != NULL)
@@ -631,8 +619,6 @@ int main(int argc, char* argv[]) {
         }
         free(sendcounts);
         free(displs);
-        free(row_counts);
-        free(row_offsets);
         free(cobertura_local);
         free(umidade_local);
         free(ativacao_local);
@@ -647,6 +633,13 @@ int main(int argc, char* argv[]) {
         free(tempo_global);
         MPI_Finalize();
         return 1;
+    }
+
+    for (int r = 0; r < nprocs; r++) {
+        int rows = base_rows + (r < rem_rows);
+        int offset = r * base_rows + min(r, rem_rows);
+        sendcounts[r] = rows * C;
+        displs[r] = offset * C;
     }
 
     // Coletivas 3..7: distribui as fatias de cobertura, umidade, ativacao, estado inicial e tempo inicial
@@ -680,9 +673,9 @@ int main(int argc, char* argv[]) {
     int up_partner = MPI_PROC_NULL;
     int down_partner = MPI_PROC_NULL;
     if (local_L > 0) {
-        if (rank > 0 && row_counts[rank - 1] > 0)
+        if (rank > 0)
             up_partner = rank - 1;
-        if (rank + 1 < nprocs && row_counts[rank + 1] > 0)
+        if (rank + 1 < min(L, nprocs))
             down_partner = rank + 1;
     }
 
@@ -863,8 +856,6 @@ int main(int argc, char* argv[]) {
 
     free(sendcounts);
     free(displs);
-    free(row_counts);
-    free(row_offsets);
     free(cobertura_local);
     free(umidade_local);
     free(ativacao_local);
