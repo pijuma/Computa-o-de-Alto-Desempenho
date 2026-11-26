@@ -23,6 +23,10 @@
 \captionsetup{font=small,labelfont=bf,hypcap=false}
 \renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}
 
+\usepackage{tikz,pgfplots,pgfplotstable}
+\usetikzlibrary{arrows.meta,positioning,decorations.pathreplacing}
+\input{figuras_tb2/graficos}
+
 \begin{document}
 
 \hypersetup{pageanchor=false}
@@ -73,6 +77,10 @@ Para o particionamento por dados, dividimos a matriz $L \times C$ em $L \times C
     \item \textbf{Testar a condição de parada.} O próximo passo só começa se ainda houver células em chamas e o limite de passos não tiver sido atingido.
 \end{enumerate}
 
+A Figura~\ref{fig:tb2-dependencias} mostra as dependências entre essas etapas.
+
+\input{figuras_tb2/dependencias}
+
 \subsection{Comunicação}
 
 \textbf{Comunicação com os vizinhos.} A comunicação é simétrica. Se uma tarefa precisa do estado de um vizinho, esse vizinho também pode precisar do estado dela. Após a ativação das contenções, a atualização espera pelos estados de fronteira do passo atual. Só o estado dos vizinhos é compartilhado, pois tempo de queima, cobertura e umidade são consultados apenas na própria célula. Se cada célula fosse tratada separadamente, seriam até oito envios por célula e por passo, com menos envios nas bordas e nos cantos.
@@ -88,6 +96,10 @@ Como o número de tarefas é muito maior que o número de processos, agrupamos a
 A escolha por linhas vem principalmente do formato da comunicação. Se o processo tem a linha inteira, os vizinhos da mesma linha já estão nele. Uma linha só depende da linha anterior e da seguinte, quando existem. Por isso, apenas a primeira e a última linha da faixa podem precisar de estados de outro processo. Uma linha inteira de fronteira inclui também os vizinhos diagonais.
 
 A divisão por colunas teria uma dependência parecida. Como a matriz é armazenada por linhas, cada faixa e cada linha de fronteira ocupam posições contíguas e podem ser enviadas diretamente. Os elementos de uma coluna estariam espaçados em memória.
+
+A Figura~\ref{fig:tb2-faixas} mostra a troca em uma fronteira entre faixas.
+
+\input{figuras_tb2/faixas}
 
 \subsection{Mapeamento}
 
@@ -142,6 +154,10 @@ Quando houver alocação comparável em um e dois nós, repetiremos o mesmo $R \
 \section{Resultados e análise}
 
 Aguardando as execuções no LASDPC. As tabelas de validação e desempenho e os gráficos serão preenchidos a partir dos registros da campanha.
+
+A Figura~\ref{fig:tb2-desempenho} apresenta os gráficos previstos para a campanha.
+
+\input{figuras_tb2/desempenho}
 
 \section{Conclusão}
 

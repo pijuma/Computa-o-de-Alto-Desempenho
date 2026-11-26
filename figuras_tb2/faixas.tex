@@ -1,0 +1,19 @@
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[font=\small, x=0.95cm, y=0.55cm, >=Latex]
+\fill[blue!9] (0,2) rectangle (5,4);
+\fill[teal!9] (0,0) rectangle (5,2);
+\fill[blue!30] (0,2) rectangle (5,3);
+\fill[teal!30] (0,1) rectangle (5,2);
+\draw[step=1, gray!60] (0,0) grid (5,4);
+\draw[thick] (0,2) -- (5,2);
+\node[anchor=east] at (-0.2,3) {Rank $r$};
+\node[anchor=east] at (-0.2,1) {Rank $r+1$};
+\draw[->,semithick,blue!70!black] (5,2.5) -- (5.5,2.5) -- (5.5,0.55) -- (5.85,0.55);
+\draw[->,semithick,teal!70!black] (5,1.5) -- (5.25,1.5) -- (5.25,3.45) -- (5.85,3.45);
+\node[anchor=west,align=left] at (5.85,3.45) {Halo de $r$};
+\node[anchor=west,align=left] at (5.85,0.55) {Halo de $r+1$};
+\end{tikzpicture}
+\caption{Duas faixas consecutivas. Cada rank recebe a linha de fronteira do vizinho, incluindo os estados necessários às consultas diagonais.}
+\label{fig:tb2-faixas}
+\end{figure}

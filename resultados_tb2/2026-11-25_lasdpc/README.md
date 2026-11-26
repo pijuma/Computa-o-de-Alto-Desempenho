@@ -1,0 +1,15 @@
+# TB2 — campanha LASDPC de 25/11/2026
+
+A campanha usou os nós hal01 e hal02, cada um com Intel Core i7-4790, quatro núcleos físicos e oito CPUs lógicas. A referência sequencial rodou em hal01. Foram testados oito layouts MPI/OpenMP e o sequencial, nas três cargas. O primeiro ensaio de cada grupo é aquecimento, seguido por cinco repetições medidas. Assim, a tabela final tem 162 execuções, 135 medidas e 27 aquecimentos. Houve 144 execuções híbridas, todas com os 11 campos funcionais idênticos aos do sequencial.
+
+O programa compilou com GCC 5.3.1 e Open MPI 4.0.1 após declarar o tamanho do bloco de contenção como constante de enumeração. A primeira tentativa com a declaração anterior e os diagnósticos do lançador MPI com stdin aberto estão preservados. Fechar stdin evitou a falha do lançador. A primeira campanha completa revelou ausência de afinidade OpenMP no rank remoto. Ela está preservada como measure no arquivo bruto e resumida em provisoria_sem_afinidade_remota. Use measure-pinned para o relatório. A repetição propagou explicitamente OMP_PLACES, OMP_PROC_BIND, OMP_SCHEDULE e OMP_DYNAMIC. O probe em afinidade_threads.txt confirmou quatro núcleos distintos para as quatro threads em cada nó no layout 2×4.
+
+A primeira repetição dos casos sintéticos usou saídas arquivadas do gerador do macOS. Como rand_r é dependente da implementação, esses casos foram recalculados com a sequência glibc e os focos sobre células não combustíveis foram ajustados no gerador de testes, com registro em adjustments.json. O binário do projeto usa a glibc nativa. Com o oráculo apropriado, 50 casos válidos coincidiram com a versão sequencial e o oráculo. As 15 entradas inválidas foram rejeitadas. O comando oficial com hostfile em dois nós também reproduziu a saída sequencial.
+
+- resultados_lasdpc.pdf apresenta os resultados e a análise para incorporar ao relatório. Os fragments .tex e figuras_tb2/desempenho.csv permitem recompor ou importar as tabelas e gráficos.
+- summary.csv inclui média, desvio padrão, semilargura do IC95 do tempo, speedup, eficiência e checksum. placement.csv inclui o contraste por rodada de 2×2 em dois nós menos um nó. saidas_oficiais.csv contém os campos determinísticos.
+- campanha_bruta.tar.gz guarda fontes, binários medidos, entradas, comandos, stdout/stderr, recursos do comando local, provas de colocação, falhas iniciais e manifestos dos nós. GNU time caracteriza o comando em hal01 e seus filhos locais. A memória agregada dos ranks remotos não foi instrumentada.
+- results.tsv contém os dados finais. validation.tsv lista os 65 casos sintéticos testados no ajuste glibc.
+- Para reconstruir o resumo neste diretório, execute python3 summarize.py results.tsv . e python3 tables.py summary.csv tabelas_lasdpc.tex. Compile resultados_lasdpc.tex a partir deste diretório.
+
+A conta do grupo foi usada em um diretório novo dentro do seu home. Nenhum pacote, configuração global ou arquivo de outro usuário foi modificado. A análise de colocação compara os layouts inteiros. A mudança de nó também altera a disputa por recursos locais, então a diferença observada inclui esses efeitos.

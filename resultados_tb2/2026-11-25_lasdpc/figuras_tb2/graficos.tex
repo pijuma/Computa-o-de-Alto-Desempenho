@@ -1,0 +1,18 @@
+\pgfplotsset{compat=1.18}
+\newcommand{\TBPlotMetric}[2]{%
+    \begin{tikzpicture}
+    \begin{axis}[
+        width=0.87\linewidth, height=4cm, ymin=0,
+        ylabel={#2}, xlabel={Configuração ($R\times T$)},
+        xtick=data, xticklabels from table={\TBResults}{configuracao},
+        xticklabel style={font=\small, rotate=25, anchor=east},
+        tick label style={font=\small}, grid=major,
+        legend style={font=\small, at={(0.5,1.05)}, anchor=south, legend columns=3},
+    ]
+    \addplot+[blue,mark=*] table[x expr=\coordindex,y=pequena_#1] {\TBResults};
+    \addplot+[teal!70!black,mark=square*] table[x expr=\coordindex,y=media_#1] {\TBResults};
+    \addplot+[orange!85!black,mark=triangle*] table[x expr=\coordindex,y=grande_#1] {\TBResults};
+    \legend{Pequena,Média,Grande}
+    \end{axis}
+    \end{tikzpicture}%
+}

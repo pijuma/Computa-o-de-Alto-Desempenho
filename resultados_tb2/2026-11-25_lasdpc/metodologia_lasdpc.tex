@@ -1,0 +1,29 @@
+\subsection{Ambiente e protocolo}
+
+As execuções ocorreram nos nós \texttt{hal01} e \texttt{hal02} do LASDPC.
+Cada nó possui um Intel Core i7-4790 de 3,60 GHz, com quatro núcleos físicos
+e oito CPUs lógicas. Os binários foram compilados com GCC 5.3.1,
+Open MPI 4.0.1 e as opções \texttt{-O3 -fopenmp}. A referência sequencial
+foi executada no \texttt{hal01}.
+
+Em um nó, os ranks foram colocados no \texttt{hal01}. Em dois nós,
+cada nó recebeu um rank. O lançador solicitou vínculo por núcleo,
+com dois núcleos por rank no caso $2\times2$. Nos testes em que
+um rank ocupava os quatro núcleos do nó, a máscara de execução
+abrangia o nó inteiro. As configurações OpenMP foram
+\texttt{OMP\_PLACES=cores}, \texttt{OMP\_PROC\_BIND=close} e
+escalonamento estático. Essas variáveis foram transmitidas explicitamente
+aos ranks remotos. Uma execução de diagnóstico registrou uma thread por
+núcleo físico em ambos os nós na configuração $2\times4$.
+
+Para cada configuração e carga, fizemos um aquecimento e cinco
+repetições medidas, na mesma ordem por rodada e com uma execução
+por vez. Cada saída híbrida foi comparada com as 11 linhas
+determinísticas do sequencial na mesma rodada. Calculamos o
+speedup pela razão entre médias de tempo do núcleo e a eficiência
+dividindo esse speedup pelo número total de threads. O intervalo
+do tempo é o intervalo de Student com quatro graus de liberdade.
+O cluster é compartilhado e a ordem fixa pode incorporar variação
+temporal de carga ou frequência. A comparação de um e dois nós
+mede o efeito conjunto da colocação, incluindo comunicação e
+uso dos recursos locais de cada nó.

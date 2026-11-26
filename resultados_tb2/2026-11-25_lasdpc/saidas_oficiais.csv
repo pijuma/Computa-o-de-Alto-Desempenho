@@ -1,0 +1,34 @@
+carga,campo,valor
+pequena,passos,80
+pequena,nao_combustiveis,39704
+pequena,intactas,127900
+pequena,em_chamas,2069
+pequena,queimadas,28105
+pequena,contencao,2222
+pequena,total_ignicoes,30171
+pequena,pico_ignicoes,79 682
+pequena,percentual_queimado,18.82
+pequena,percentual_protegido,1.39
+pequena,checksum,17073017104646724864
+media,passos,100
+media,nao_combustiveis,360809
+media,intactas,1324373
+media,em_chamas,5734
+media,queimadas,93801
+media,contencao,15283
+media,total_ignicoes,99529
+media,pico_ignicoes,98 1863
+media,percentual_queimado,6.92
+media,percentual_protegido,1.06
+media,checksum,17187382406529706254
+grande,passos,100
+grande,nao_combustiveis,1251181
+grande,intactas,4804870
+grande,em_chamas,7434
+grande,queimadas,121067
+grande,contencao,65448
+grande,total_ignicoes,128491
+grande,pico_ignicoes,99 2381
+grande,percentual_queimado,2.57
+grande,percentual_protegido,1.31
+grande,checksum,14825089465781038537

@@ -1,0 +1,379 @@
+{
+  "records": [
+    {
+      "name": "cpu",
+      "command": [
+        "lscpu"
+      ],
+      "returncode": 0,
+      "wall_seconds": 0.004168913999933466
+    },
+    {
+      "name": "memory",
+      "command": [
+        "free",
+        "-b"
+      ],
+      "returncode": 0,
+      "wall_seconds": 0.003897497000025396
+    },
+    {
+      "name": "gcc",
+      "command": [
+        "gcc",
+        "--version"
+      ],
+      "returncode": 0,
+      "wall_seconds": 0.003973076000079345
+    },
+    {
+      "name": "mpi",
+      "command": [
+        "mpirun",
+        "--version"
+      ],
+      "returncode": 0,
+      "wall_seconds": 0.008069694000027994
+    },
+    {
+      "name": "mpicc",
+      "command": [
+        "mpicc",
+        "--showme"
+      ],
+      "returncode": 0,
+      "wall_seconds": 0.0039669209999146915
+    },
+    {
+      "name": "libc",
+      "command": [
+        "ldd",
+        "--version"
+      ],
+      "returncode": 0,
+      "wall_seconds": 0.003871093000043402
+    },
+    {
+      "name": "build",
+      "command": [
+        "make",
+        "CC=gcc",
+        "CFLAGS=-Wall -Wextra -Werror -O3 -fopenmp",
+        "fire_seq",
+        "fire_mpi_omp"
+      ],
+      "returncode": 0,
+      "wall_seconds": 0.9187371089999488
+    },
+    {
+      "name": "entrada_carga_grande-seq",
+      "command": [
+        "./fire_seq",
+        "/content/tb2-audit-v3/source/entrada_carga_grande-t1.txt"
+      ],
+      "returncode": 0,
+      "wall_seconds": 25.519506668999952
+    },
+    {
+      "name": "entrada_carga_grande-1x1",
+      "command": [
+        "mpirun",
+        "--allow-run-as-root",
+        "--hostfile",
+        "/content/tb2-audit-v3/hosts",
+        "--use-hwthread-cpus",
+        "--map-by",
+        "slot:PE=1",
+        "--bind-to",
+        "hwthread",
+        "--report-bindings",
+        "-np",
+        "1",
+        "./fire_mpi_omp",
+        "/content/tb2-audit-v3/source/entrada_carga_grande-t1.txt"
+      ],
+      "returncode": 0,
+      "wall_seconds": 28.33486830800007
+    },
+    {
+      "name": "entrada_carga_grande-1x2",
+      "command": [
+        "mpirun",
+        "--allow-run-as-root",
+        "--hostfile",
+        "/content/tb2-audit-v3/hosts",
+        "--use-hwthread-cpus",
+        "--map-by",
+        "slot:PE=2",
+        "--bind-to",
+        "hwthread",
+        "--report-bindings",
+        "-np",
+        "1",
+        "./fire_mpi_omp",
+        "/content/tb2-audit-v3/source/entrada_carga_grande-t2.txt"
+      ],
+      "returncode": 0,
+      "wall_seconds": 24.37357207900004
+    },
+    {
+      "name": "entrada_carga_grande-2x1",
+      "command": [
+        "mpirun",
+        "--allow-run-as-root",
+        "--hostfile",
+        "/content/tb2-audit-v3/hosts",
+        "--use-hwthread-cpus",
+        "--map-by",
+        "slot:PE=1",
+        "--bind-to",
+        "hwthread",
+        "--report-bindings",
+        "-np",
+        "2",
+        "./fire_mpi_omp",
+        "/content/tb2-audit-v3/source/entrada_carga_grande-t1.txt"
+      ],
+      "returncode": 0,
+      "wall_seconds": 24.940645940999957
+    },
+    {
+      "name": "entrada_carga_media-seq",
+      "command": [
+        "./fire_seq",
+        "/content/tb2-audit-v3/source/entrada_carga_media-t1.txt"
+      ],
+      "returncode": 0,
+      "wall_seconds": 6.893671420000032
+    },
+    {
+      "name": "entrada_carga_media-1x1",
+      "command": [
+        "mpirun",
+        "--allow-run-as-root",
+        "--hostfile",
+        "/content/tb2-audit-v3/hosts",
+        "--use-hwthread-cpus",
+        "--map-by",
+        "slot:PE=1",
+        "--bind-to",
+        "hwthread",
+        "--report-bindings",
+        "-np",
+        "1",
+        "./fire_mpi_omp",
+        "/content/tb2-audit-v3/source/entrada_carga_media-t1.txt"
+      ],
+      "returncode": 0,
+      "wall_seconds": 8.901676967999947
+    },
+    {
+      "name": "entrada_carga_media-1x2",
+      "command": [
+        "mpirun",
+        "--allow-run-as-root",
+        "--hostfile",
+        "/content/tb2-audit-v3/hosts",
+        "--use-hwthread-cpus",
+        "--map-by",
+        "slot:PE=2",
+        "--bind-to",
+        "hwthread",
+        "--report-bindings",
+        "-np",
+        "1",
+        "./fire_mpi_omp",
+        "/content/tb2-audit-v3/source/entrada_carga_media-t2.txt"
+      ],
+      "returncode": 0,
+      "wall_seconds": 6.1958342300000595
+    },
+    {
+      "name": "entrada_carga_media-2x1",
+      "command": [
+        "mpirun",
+        "--allow-run-as-root",
+        "--hostfile",
+        "/content/tb2-audit-v3/hosts",
+        "--use-hwthread-cpus",
+        "--map-by",
+        "slot:PE=1",
+        "--bind-to",
+        "hwthread",
+        "--report-bindings",
+        "-np",
+        "2",
+        "./fire_mpi_omp",
+        "/content/tb2-audit-v3/source/entrada_carga_media-t1.txt"
+      ],
+      "returncode": 0,
+      "wall_seconds": 8.918544657000098
+    },
+    {
+      "name": "entrada_carga_pequena-seq",
+      "command": [
+        "./fire_seq",
+        "/content/tb2-audit-v3/source/entrada_carga_pequena-t1.txt"
+      ],
+      "returncode": 0,
+      "wall_seconds": 0.6162588219999634
+    },
+    {
+      "name": "entrada_carga_pequena-1x1",
+      "command": [
+        "mpirun",
+        "--allow-run-as-root",
+        "--hostfile",
+        "/content/tb2-audit-v3/hosts",
+        "--use-hwthread-cpus",
+        "--map-by",
+        "slot:PE=1",
+        "--bind-to",
+        "hwthread",
+        "--report-bindings",
+        "-np",
+        "1",
+        "./fire_mpi_omp",
+        "/content/tb2-audit-v3/source/entrada_carga_pequena-t1.txt"
+      ],
+      "returncode": 0,
+      "wall_seconds": 0.9691690810000182
+    },
+    {
+      "name": "entrada_carga_pequena-1x2",
+      "command": [
+        "mpirun",
+        "--allow-run-as-root",
+        "--hostfile",
+        "/content/tb2-audit-v3/hosts",
+        "--use-hwthread-cpus",
+        "--map-by",
+        "slot:PE=2",
+        "--bind-to",
+        "hwthread",
+        "--report-bindings",
+        "-np",
+        "1",
+        "./fire_mpi_omp",
+        "/content/tb2-audit-v3/source/entrada_carga_pequena-t2.txt"
+      ],
+      "returncode": 0,
+      "wall_seconds": 0.8672139349999952
+    },
+    {
+      "name": "entrada_carga_pequena-2x1",
+      "command": [
+        "mpirun",
+        "--allow-run-as-root",
+        "--hostfile",
+        "/content/tb2-audit-v3/hosts",
+        "--use-hwthread-cpus",
+        "--map-by",
+        "slot:PE=1",
+        "--bind-to",
+        "hwthread",
+        "--report-bindings",
+        "-np",
+        "2",
+        "./fire_mpi_omp",
+        "/content/tb2-audit-v3/source/entrada_carga_pequena-t1.txt"
+      ],
+      "returncode": 0,
+      "wall_seconds": 0.9206789910000452
+    },
+    {
+      "name": "degenerate-seq",
+      "command": [
+        "./fire_seq",
+        "/content/tb2-audit-v3/source/degenerate-t1.txt"
+      ],
+      "returncode": 0,
+      "wall_seconds": 0.002260263000039231
+    },
+    {
+      "name": "degenerate-1x1",
+      "command": [
+        "mpirun",
+        "--allow-run-as-root",
+        "--hostfile",
+        "/content/tb2-audit-v3/hosts",
+        "--use-hwthread-cpus",
+        "--map-by",
+        "slot:PE=1",
+        "--bind-to",
+        "hwthread",
+        "--report-bindings",
+        "-np",
+        "1",
+        "./fire_mpi_omp",
+        "/content/tb2-audit-v3/source/degenerate-t1.txt"
+      ],
+      "returncode": 0,
+      "wall_seconds": 0.3151290289999906
+    },
+    {
+      "name": "degenerate-1x2",
+      "command": [
+        "mpirun",
+        "--allow-run-as-root",
+        "--hostfile",
+        "/content/tb2-audit-v3/hosts",
+        "--use-hwthread-cpus",
+        "--map-by",
+        "slot:PE=2",
+        "--bind-to",
+        "hwthread",
+        "--report-bindings",
+        "-np",
+        "1",
+        "./fire_mpi_omp",
+        "/content/tb2-audit-v3/source/degenerate-t2.txt"
+      ],
+      "returncode": 0,
+      "wall_seconds": 0.31523234999997385
+    },
+    {
+      "name": "degenerate-2x1",
+      "command": [
+        "mpirun",
+        "--allow-run-as-root",
+        "--hostfile",
+        "/content/tb2-audit-v3/hosts",
+        "--use-hwthread-cpus",
+        "--map-by",
+        "slot:PE=1",
+        "--bind-to",
+        "hwthread",
+        "--report-bindings",
+        "-np",
+        "2",
+        "./fire_mpi_omp",
+        "/content/tb2-audit-v3/source/degenerate-t1.txt"
+      ],
+      "returncode": 0,
+      "wall_seconds": 0.3671801469999991
+    },
+    {
+      "name": "missing",
+      "command": [
+        "mpirun",
+        "--allow-run-as-root",
+        "--hostfile",
+        "/content/tb2-audit-v3/hosts",
+        "--use-hwthread-cpus",
+        "--map-by",
+        "slot:PE=1",
+        "--bind-to",
+        "hwthread",
+        "--report-bindings",
+        "-np",
+        "2",
+        "./fire_mpi_omp",
+        "/content/tb2-audit-v3/source/missing.txt"
+      ],
+      "returncode": 1,
+      "wall_seconds": 2.3736852349999253
+    }
+  ],
+  "failures": []
+}

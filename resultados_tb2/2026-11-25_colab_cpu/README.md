@@ -1,0 +1,9 @@
+# TB2 no Colab CPU
+
+Validação funcional em 25/11/2026. Runtime CPU padrão, sem acelerador e sem instalação de pacotes. Linux 6.6.159+, x86-64, Intel Xeon a 2,20 GHz, 2 CPUs lógicas do mesmo núcleo (SMT), 13.605.818.368 bytes de RAM reportada. GCC 13.3.0, Open MPI 4.1.6 e glibc 2.39. O arquivo environment.json registra a afinidade inicial e o ambiente OpenMP. Os logs em cada arquivo compactado incluem a topologia e a colocação informada pelo MPI. Na configuração 2×1 os ranks ficam em threads de hardware distintas. Em 1×2 o rank tem acesso às duas CPUs lógicas e o OpenMP usa OMP_PLACES=threads e OMP_PROC_BIND=close.
+
+A tentativa 3 passou em 12 comparações MPI contra o sequencial, cobrindo três cargas oficiais e uma grade 1×7 com P=0, nas configurações 1×1, 1×2 e 2×1. A entrada ausente foi rejeitada com código 1 e stdout vazio. Uma execução por configuração. Os tempos são exploratórios e pertencem a um único nó Colab. As medições do relatório de entrega permanecem reservadas ao LASDPC.
+
+A tentativa 1 compilou e parou ao encontrar um metadado AppleDouble com extensão .txt. A tentativa 2 selecionou as cargas pelo nome e registrou a falha de colocação MPI para dois trabalhadores quando solicitados dois núcleos físicos. A tentativa 3 usou as duas threads de hardware sem sobresubscrição de CPUs lógicas. Houve perda de conexão durante o lançamento interativo da terceira tentativa; a inspeção mostrou que ela ainda não havia iniciado e o relançamento em segundo plano concluiu.
+
+Cada archive contém stdout, stderr, comandos, código de retorno, tempo de parede, fontes, entradas, commit e manifesto gerado no runtime. O CSV resume os tempos do núcleo e os checksums. Para extrair em macOS preservando os membros AppleDouble originais, use Python tarfile com filtro data e depois confira o SHA256SUMS dentro do diretório extraído.

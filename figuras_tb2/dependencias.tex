@@ -1,0 +1,20 @@
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    etapa/.style={draw, rounded corners=2pt, align=center, inner sep=5pt},
+    fluxo/.style={-{Latex[length=2mm]}, semithick},
+    node distance=5mm, font=\small
+]
+\node[etapa] (ativar) {Ativar contenções em cada faixa};
+\node[etapa, below=of ativar] (trocar) {Concluir a ativação local e trocar estados de fronteira};
+\node[etapa, below=of trocar] (atualizar) {Atualizar as células em paralelo};
+\node[etapa, below=of atualizar] (reduzir) {Somar novas ignições e células em chamas};
+\node[etapa, below=of reduzir] (parar) {Trocar as matrizes e decidir se há outro passo};
+\draw[fluxo] (ativar) -- (trocar);
+\draw[fluxo] (trocar) -- (atualizar);
+\draw[fluxo] (atualizar) -- (reduzir);
+\draw[fluxo] (reduzir) -- (parar);
+\end{tikzpicture}
+\caption{Dependências de um passo. Cada faixa atualiza suas células após a ativação local e o recebimento das fronteiras vizinhas.}
+\label{fig:tb2-dependencias}
+\end{figure}

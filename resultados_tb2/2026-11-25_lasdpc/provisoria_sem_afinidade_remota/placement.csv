@@ -1,0 +1,4 @@
+carga,contraste,media_diferenca_s,ic95_inferior_s,ic95_superior_s,n
+pequena,dois_nos_menos_um_no_2x2,0.034408,-0.005388,0.074204,5
+media,dois_nos_menos_um_no_2x2,-0.022799,-0.034350,-0.011248,5
+grande,dois_nos_menos_um_no_2x2,-0.026206,-0.163144,0.110732,5

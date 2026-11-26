@@ -1,0 +1,26 @@
+\subsection{Resultados e análise}
+
+As saídas híbridas coincidiram com a saída sequencial em todas as
+144 execuções paralelas, incluindo os aquecimentos. Os checksums,
+da carga pequena à grande, foram
+\texttt{17073017104646724864}, \texttt{17187382406529706254} e
+\texttt{14825089465781038537}.
+
+A configuração $2\times4$ em dois nós apresentou a menor média nas
+três cargas (Tabelas~\ref{tab:lasdpc-pequena} a~\ref{tab:lasdpc-grande}).
+Na carga grande, o tempo médio passou de 13,28~s no sequencial para
+2,05~s, com speedup de 6,48 e eficiência de 81,0\%. A diferença entre
+as cargas aparece na eficiência dessa configuração, de 55,2\% na
+pequena a 81,0\% na grande.
+
+Com dois ranks e duas threads por rank, calculamos a diferença
+de tempo entre dois nós e um nó em cada rodada. Na carga média,
+a diferença média foi de $-0{,}0228$~s, com IC de 95\% de
+$[-0{,}0344; -0{,}0112]$~s. Nas cargas pequena e grande, os
+intervalos dessas diferenças incluíram zero. Como a colocação
+muda tanto os caminhos de comunicação quanto os recursos que cada
+rank compartilha, a comparação diz respeito à configuração completa.
+
+A Figura~\ref{fig:tb2-desempenho} reúne tempo, speedup e eficiência.
+Nos rótulos, \texttt{one} identifica o \texttt{hal01} e
+\texttt{two} identifica \texttt{hal01} e \texttt{hal02}.

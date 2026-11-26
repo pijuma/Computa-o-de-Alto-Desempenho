@@ -1,0 +1,21 @@
+% Preencher desempenho.csv com dados LASDPC conforme README.md.
+\IfFileExists{figuras_tb2/desempenho.csv}{%
+    \pgfplotstableread[col sep=comma]{figuras_tb2/desempenho.csv}\TBResults
+    \begin{figure}[htbp]
+    \centering
+    \TBPlotMetric{tempo_s}{Tempo do núcleo (s)}\par\medskip
+    \TBPlotMetric{speedup}{Speedup}\par\medskip
+    \TBPlotMetric{eficiencia_pct}{Eficiência (\%)}
+    \caption{Tempo, speedup e eficiência por configuração e carga no LASDPC.}
+    \label{fig:tb2-desempenho}
+    \end{figure}
+}{%
+    \begin{figure}[htbp]
+    \centering
+    \fbox{\parbox{0.82\linewidth}{\centering
+        Tempo do núcleo, speedup e eficiência por configuração.\par
+        Dados do LASDPC pendentes.}}%
+    \caption{Painéis previstos para a comparação de configurações no LASDPC.}
+    \label{fig:tb2-desempenho}
+    \end{figure}
+}

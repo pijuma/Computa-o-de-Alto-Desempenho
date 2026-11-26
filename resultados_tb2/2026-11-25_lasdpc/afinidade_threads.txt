@@ -1,0 +1,8 @@
+host=hal01 rank=0 thread=0 team=4 cpus=0 4 
+host=hal01 rank=0 thread=1 team=4 cpus=1 5 
+host=hal01 rank=0 thread=2 team=4 cpus=2 6 
+host=hal01 rank=0 thread=3 team=4 cpus=3 7 
+host=hal02 rank=1 thread=0 team=4 cpus=0 4 
+host=hal02 rank=1 thread=2 team=4 cpus=2 6 
+host=hal02 rank=1 thread=3 team=4 cpus=3 7 
+host=hal02 rank=1 thread=1 team=4 cpus=1 5 

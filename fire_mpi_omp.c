@@ -103,9 +103,9 @@ void construir_mapa_ativacao_tasks(
     // Constroi o mapa de contencao antes do trecho cronometrado usando omp tasks
     // Cada task inicializa e preenche um bloco disjunto de linhas, garantindo escritor unico
 
-    const int BLOCO_LINHAS = 64;
+    enum { BLOCO_LINHAS = 64 };
 
-    #pragma omp parallel num_threads(T) default(none) shared(ativacao, L, C, zonas, Z, BLOCO_LINHAS)
+    #pragma omp parallel num_threads(T) default(none) shared(ativacao, L, C, zonas, Z)
     {
         #pragma omp single
         {

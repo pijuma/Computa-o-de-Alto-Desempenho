@@ -1,0 +1,20 @@
+{
+  "host": "d0dfdfd2f63b",
+  "kernel": "6.6.159+",
+  "affinity": [
+    0,
+    1
+  ],
+  "omp": {
+    "OMP_DYNAMIC": "FALSE",
+    "OMP_SCHEDULE": "static",
+    "OMP_PROC_BIND": "close",
+    "OMP_PLACES": "threads"
+  },
+  "cpu_limit": [
+    "max 100000\n",
+    "max\n"
+  ],
+  "gpu_device_files": [],
+  "source_date_utc": "2026-11-25T16:12:05Z"
+}
